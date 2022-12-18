@@ -4,6 +4,11 @@ on:
   push:
     paths-ignore:
       - '.github/**'
+    branches:
+      - main
+  pull_request:
+    paths-ignore:
+      - '.github/**'
   schedule:
     - cron: '0 0 * * *' # Daily at midnight
 
@@ -29,14 +34,28 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Build Image
+        id: build_image
         uses: redhat-actions/buildah-build@v2
         with:
           image: ${{ matrix.image_name }}
-          tags: ${{ env.IMAGE_TAGS }}
+          tags: ${{ env.IMAGE_TAGS }} ${{ env.DATE }}
           context: ${{ matrix.location }}
           containerfiles: |
             ${{ matrix.location }}/Containerfile
           oci: true
+
+      # Workaround bug where capital letters in your GitHub user name make it impossible to push to GHCR.
+      # https://github.com/macbre/push-to-ghcr/issues/12
+      - name: Lowercase Registry
+        id: registry_case
+        if: github.ref == 'refs/heads/main'
+        uses: ASzc/change-string-case-action@v5
+        with:
+           string: ${{ env.IMAGE_REGISTRY }}
+
+      - name: Set build date
+        if: github.ref == 'refs/heads/main'
+        run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
       - name: Push Image to GHCR
         id: push
