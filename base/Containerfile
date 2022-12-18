@@ -1,0 +1,3 @@
+FROM busybox:stable
+
+RUN touch hello.txt
