@@ -48,7 +48,7 @@ jobs:
       # https://github.com/macbre/push-to-ghcr/issues/12
       - name: Lowercase Registry
         id: registry_case
-        #if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         uses: ASzc/change-string-case-action@v5
         with:
            string: ${{ env.IMAGE_REGISTRY }}
@@ -58,7 +58,7 @@ jobs:
 
       - name: Push Image to GHCR
         id: push
-        #if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         uses: redhat-actions/push-to-registry@v2
         with:
           image: ${{ matrix.image_name }}
@@ -70,6 +70,6 @@ jobs:
             --disable-content-trust
 
       - name: Echo outputs
-        #if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         run: |
           echo "${{ toJSON(steps.push.outputs) }}"
