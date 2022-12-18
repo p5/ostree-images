@@ -54,6 +54,7 @@ jobs:
            string: ${{ env.IMAGE_REGISTRY }}
 
       - name: Set build date
+        if: github.ref == 'refs/heads/main'
         run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
       - name: Push Image to GHCR
