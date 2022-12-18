@@ -27,7 +27,6 @@ jobs:
       matrix:
         include:
           - location: ./base
-            containerfile: Containerfile
             image_name: silverblue-base
 
     steps:
