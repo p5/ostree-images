@@ -33,7 +33,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Build Image
+      - name: Set build date
+        run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+
+      - name: Build image
         id: build_image
         uses: redhat-actions/buildah-build@v2
         with:
@@ -46,18 +49,14 @@ jobs:
 
       # Workaround bug where capital letters in your GitHub user name make it impossible to push to GHCR.
       # https://github.com/macbre/push-to-ghcr/issues/12
-      - name: Lowercase Registry
+      - name: Set registry
         id: registry_case
         if: github.ref == 'refs/heads/main'
         uses: ASzc/change-string-case-action@v5
         with:
            string: ${{ env.IMAGE_REGISTRY }}
 
-      - name: Set build date
-        if: github.ref == 'refs/heads/main'
-        run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
-
-      - name: Push Image to GHCR
+      - name: Push image to GHCR
         id: push
         if: github.ref == 'refs/heads/main'
         uses: redhat-actions/push-to-registry@v2
