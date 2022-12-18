@@ -38,6 +38,14 @@ jobs:
             ${{ matrix.location }}/Containerfile
           oci: true
 
+      # Workaround bug where capital letters in your GitHub user name make it impossible to push to GHCR.
+      # https://github.com/macbre/push-to-ghcr/issues/12
+      - name: Lowercase Registry
+        id: registry_case
+        uses: ASzc/change-string-case-action@v5
+        with:
+           string: ${{ env.IMAGE_REGISTRY }}
+
       - name: Push Image to GHCR
         id: push
         if: github.ref == 'refs/heads/main'
