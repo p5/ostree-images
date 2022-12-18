@@ -8,6 +8,7 @@ FROM ghcr.io/cgwalters/fedora-silverblue:${FEDORA_MAJOR_VERSION} as kernel-query
 RUN rpm -qa kernel --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}' > /kernel-version.txt && \
     echo "Detected kernel version: $(cat /kernel-version.txt)"
 
+
 FROM fedora:${FEDORA_MAJOR_VERSION} AS nvidia-base
 
 ARG RPMFUSION_FREE
@@ -31,6 +32,7 @@ RUN KERNEL_RELEASE=$(cat /kernel-version.txt) && \
         kernel-${KERNEL_RELEASE} && \
     dnf clean all && \
     akmods --force
+
 
 # See https://pagure.io/releng/issue/11047 for final location
 FROM ghcr.io/cgwalters/fedora-silverblue:${FEDORA_MAJOR_VERSION}
