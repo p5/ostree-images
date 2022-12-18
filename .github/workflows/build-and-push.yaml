@@ -42,6 +42,7 @@ jobs:
       # https://github.com/macbre/push-to-ghcr/issues/12
       - name: Lowercase Registry
         id: registry_case
+        if: github.ref == 'refs/heads/main'
         uses: ASzc/change-string-case-action@v5
         with:
            string: ${{ env.IMAGE_REGISTRY }}
