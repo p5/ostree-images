@@ -1,6 +1,5 @@
 name: Run pre-commit hooks
 on:
-  - push
   - pull_request
 
 jobs:
