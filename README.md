@@ -1,1 +1,1 @@
-# ostree images
+# Immutable Desktop Images
