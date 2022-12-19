@@ -51,15 +51,15 @@ jobs:
           echo "date=$(date +%Y%m%d)-${{ matrix.fedora_project }}" >> $GITHUB_OUTPUT
           echo "sha_short=$(git rev-parse --short HEAD)-${{ matrix.fedora_project }}" >> $GITHUB_OUTPUT
           echo "release=${{ matrix.fedora_major_version }}-${{ matrix.fedora_project }}" >> $GITHUB_OUTPUT
+          # Create default_tags output which appends the fedora_project to the tags in the matrix
+          echo "default_tags=$(echo ${{ matrix.tags }} | sed -e "s/ /-${{ matrix.fedora_project }} /g")-${{ matrix.fedora_project }}" >> $GITHUB_OUTPUT
 
-          default_tags=()
-          for tag in ${{ matrix.tags }}; do
-            default_tags+=("${tag}-${{ matrix.fedora_project }}")
-          done
-          echo "default_tags=${default_tags[*]}" >> $GITHUB_OUTPUT
+          # Output for debugging
+          echo "Outputs: $(echo $GITHUB_OUTPUT)"
 
       - name: Build image
         id: build_image
+        if: github.ref == 'refs/heads/main'
         uses: redhat-actions/buildah-build@v2
         with:
           image: ${{ matrix.image_name }}
