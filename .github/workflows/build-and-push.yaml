@@ -7,9 +7,9 @@ on:
   #      - '.github/**'
   #    branches:
   #      - main
-  pull_request:
-    paths-ignore:
-      - '.github/**'
+  #pull_request:
+  #  paths-ignore:
+  #    - '.github/**'
   schedule:
     # Every Monday at 00:00 while the repository is not used, or is in active development
     - cron: '0 0 * * 1'
