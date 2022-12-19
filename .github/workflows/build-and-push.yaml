@@ -38,7 +38,7 @@ jobs:
           - location: ./base
           - tags: ${{ github.sha }}
           - fedora_major_version: 37
-            tags: [latest, stable]
+            tags: ["latest", "stable"]
 
     steps:
       - name: Checkout
