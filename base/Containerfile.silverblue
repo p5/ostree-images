@@ -1,0 +1,74 @@
+ARG FEDORA_MAJOR_VERSION=37
+ARG RPMFUSION_FREE="https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-${FEDORA_MAJOR_VERSION}.noarch.rpm"
+ARG RPMFUSION_NON_FREE="https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-${FEDORA_MAJOR_VERSION}.noarch.rpm"
+
+FROM ghcr.io/cgwalters/fedora-silverblue:${FEDORA_MAJOR_VERSION} as kernel-query
+
+# Get latest kernel version
+RUN rpm -qa kernel --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}' > /kernel-version.txt && \
+    echo "Detected kernel version: $(cat /kernel-version.txt)"
+
+
+FROM fedora:${FEDORA_MAJOR_VERSION} AS nvidia-base
+
+ARG RPMFUSION_FREE
+ARG RPMFUSION_NON_FREE
+
+# Copy kernel version from kernel-query stage
+COPY --from=kernel-query /kernel-version.txt /kernel-version.txt
+
+# Install NVIDIA drivers
+RUN KERNEL_RELEASE=$(cat /kernel-version.txt) && \
+    dnf install -y \
+        ${RPMFUSION_FREE} \
+        ${RPMFUSION_NON_FREE} \
+        fedora-repos-archive && \
+    dnf install -y \
+        mock \
+        xorg-x11-drv-nvidia \
+        xorg-x11-drv-nvidia-cuda \
+        binutils \
+        kernel-devel-${KERNEL_RELEASE} \
+        kernel-${KERNEL_RELEASE} && \
+    dnf clean all && \
+    akmods --force
+
+
+# See https://pagure.io/releng/issue/11047 for final location
+FROM ghcr.io/cgwalters/fedora-silverblue:${FEDORA_MAJOR_VERSION}
+
+ARG RPMFUSION_FREE
+ARG RPMFUSION_NON_FREE
+
+# Copy kernel version from kernel-query stage
+COPY --from=kernel-query /kernel-version.txt /kernel-version.txt
+
+# Copy NVIDIA drivers from nvidia-base stage
+COPY --from=nvidia-base /var/cache/akmods/nvidia /tmp/nvidia
+
+# Copy configuration files
+COPY etc /etc
+COPY firstboot /usr/bin
+
+# Install NVIDIA drivers from the previous stage
+RUN KERNEL_RELEASE=$(cat /kernel-version.txt) && \
+    rpm-ostree install \
+        ${RPMFUSION_FREE} \
+        ${RPMFUSION_NON_FREE} && \
+    rpm-ostree install \
+        xorg-x11-drv-nvidia \
+        xorg-x11-drv-nvidia-cuda \
+        kernel-${KERNEL_RELEASE} && \
+    rpm-ostree install /tmp/nvidia/*${KERNEL_RELEASE}*.rpm && \
+    rm -rf /var/* && rm -rf /tmp/nvidia && \
+    ostree container commit
+
+# Install additional RPM packages
+RUN rpm-ostree override remove firefox firefox-langpacks && \
+    rpm-ostree install distrobox gnome-tweaks && \
+    sed -i 's/#AutomaticUpdatePolicy.*/AutomaticUpdatePolicy=stage/' /etc/rpm-ostreed.conf && \
+    systemctl enable rpm-ostreed-automatic.timer && \
+    systemctl enable flatpak-automatic.timer && \
+    rpm-ostree cleanup -m && \
+    rm -rf /var/* && \
+    ostree container commit
