@@ -38,7 +38,8 @@ jobs:
           - location: ./base
           - tags: ${{ github.sha }}
           - fedora_major_version: 37
-            tags: ["latest", "stable"]
+            is_latest: true
+            is_stable: true
 
     steps:
       - name: Checkout
@@ -51,8 +52,15 @@ jobs:
           echo "date=$(date +%Y%m%d)-${{ matrix.fedora_project }}" >> $GITHUB_OUTPUT
           echo "sha_short=$(git rev-parse --short HEAD)-${{ matrix.fedora_project }}" >> $GITHUB_OUTPUT
           echo "release=${{ matrix.fedora_major_version }}-${{ matrix.fedora_project }}" >> $GITHUB_OUTPUT
-          # Create default_tags output which appends the fedora_project to the tags in the matrix
-          echo "default_tags=$(echo ${{ matrix.tags }} | sed -e "s/ /-${{ matrix.fedora_project }} /g")-${{ matrix.fedora_project }}" >> $GITHUB_OUTPUT
+
+          alias_tags=()
+          if [[ "${{ matrix.is_latest }}" == "true" ]]; then
+            alias_tags+=("latest-${{ matrix.fedora_project }}")
+          fi
+          if [[ "${{ matrix.is_stable }}" == "true" ]]; then
+            alias_tags+=("stable-${{ matrix.fedora_project }}")
+          fi
+          echo "alias_tags=${alias_tags[*]}" >> $GITHUB_OUTPUT
 
       - name: Build image
         id: build_image
@@ -60,7 +68,7 @@ jobs:
         with:
           image: ${{ matrix.image_name }}
           tags: |
-            ${{ steps.generate-metadata.outputs.default_tags }}
+            ${{ steps.generate-metadata.outputs.alias_tags }}
             ${{ steps.generate-metadata.outputs.release }}
             ${{ steps.generate-metadata.outputs.date }}
             ${{ steps.generate-metadata.outputs.sha_short }}
