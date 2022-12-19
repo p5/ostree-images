@@ -55,7 +55,7 @@ jobs:
           echo "default_tags=$(echo ${{ matrix.tags }} | sed -e "s/ /-${{ matrix.fedora_project }} /g")-${{ matrix.fedora_project }}" >> $GITHUB_OUTPUT
 
           # Output for debugging
-          echo "Outputs: $(echo $GITHUB_OUTPUT)"
+          echo "Outputs: $(cat $GITHUB_OUTPUT)"
 
       - name: Build image
         id: build_image
