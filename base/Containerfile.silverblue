@@ -9,6 +9,7 @@ RUN rpm -qa kernel --queryformat '%{VERSION}-%{RELEASE}.%{ARCH}' > /kernel-versi
     echo "Detected kernel version: $(cat /kernel-version.txt)"
 
 
+
 FROM fedora:${FEDORA_MAJOR_VERSION} AS nvidia-base
 
 ARG RPMFUSION_FREE
