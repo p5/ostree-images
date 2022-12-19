@@ -1,3 +1,0 @@
-FROM busybox:latest
-
-RUN touch /tmp/1
