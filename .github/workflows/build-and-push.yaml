@@ -1,18 +1,19 @@
 name: Build and Push Image
 
 on:
-  push:
-    paths-ignore:
-      - '.github/**'
-    branches:
-      - main
-# To save on build minutes, this should currently be tested locally
-  pull_request:
-    paths-ignore:
-      - '.github/**'
+  # To save on build minutes, this should currently be tested locally and triggered manually
+#  push:
+#    paths-ignore:
+#      - '.github/**'
+#    branches:
+#      - main
+#  pull_request:
+#    paths-ignore:
+#      - '.github/**'
   schedule:
     # Every Monday at 00:00 while the repository is not used, or is in active development
     - cron: '0 0 * * 1'
+  workflow_dispatch:
 
 env:
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
