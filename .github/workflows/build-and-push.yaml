@@ -1,22 +1,28 @@
 name: Build and Push Image
 
 on:
-  push:
-    paths-ignore:
-      - '.github/**'
-    branches:
-      - main
-  pull_request:
-    paths-ignore:
-      - '.github/**'
+  # To save on build minutes, this should currently be tested locally and triggered manually
+#  push:
+#    paths-ignore:
+#      - '.github/**'
+#    branches:
+#      - main
+#  pull_request:
+#    paths-ignore:
+#      - '.github/**'
   schedule:
-    - cron: '0 0 * * *' # Daily at midnight
+    # Every Monday at 00:00 while the repository is not used, or is in active development
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
 
 env:
-  IMAGE_TAGS: latest ${{ github.sha }}
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
   REGISTRY_USER: ${{ github.actor }}
   REGISTRY_PASSWORD: ${{ github.token }}
+
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
 
 jobs:
   base-images:
@@ -25,29 +31,46 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        fedora_major_version: [37]
+        fedora_project: [silverblue, kinoite]
         include:
+          - image_name: fedora-base
           - location: ./base
-            image_name: silverblue-base
+          - tags: ${{ github.sha }}
+          - fedora_major_version: 37
+            tags: latest stable
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Set build date
-        run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+      - name: Generate metadata
+        id: generate-metadata
+        shell: bash
+        run: |
+          echo "date=$(date +%Y%m%d)-${{ matrix.fedora_project }}" >> $GITHUB_OUTPUT
+          echo "sha_short=$(git rev-parse --short HEAD)-${{ matrix.fedora_project }}" >> $GITHUB_OUTPUT
+          echo "release=${{ matrix.fedora_major_version }}-${{ matrix.fedora_project }}" >> $GITHUB_OUTPUT
+          echo "default_tags=${{ matrix.tags }}-${{ matrix.fedora_project }}" >> $GITHUB_OUTPUT
 
       - name: Build image
         id: build_image
         uses: redhat-actions/buildah-build@v2
         with:
           image: ${{ matrix.image_name }}
-          tags: ${{ env.IMAGE_TAGS }} ${{ env.DATE }}
+          tags: |
+            ${{ steps.generate-metadata.outputs.default_tags }}
+            ${{ steps.generate-metadata.outputs.release }}
+            ${{ steps.generate-metadata.outputs.date }}
+            ${{ steps.generate-metadata.outputs.sha_short }}
           context: ${{ matrix.location }}
           containerfiles: |
-            ${{ matrix.location }}/Containerfile
+            ${{ matrix.location }}/Containerfile.${{ matrix.fedora_project }}
+          build-args: |
+            FEDORA_MAJOR_VERSION=${{ matrix.fedora_major_version }}
           oci: true
 
-      # Workaround bug where capital letters in your GitHub user name make it impossible to push to GHCR.
+      # Workaround bug where capital letters in your GitHub user ame make it impossible to push to GHCR.
       # https://github.com/macbre/push-to-ghcr/issues/12
       - name: Set registry
         id: registry_case
