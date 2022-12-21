@@ -30,7 +30,7 @@ jobs:
       fail-fast: false
       matrix:
         fedora_major_version: [37]
-        fedora_project: [silverblue, kinoite]
+        fedora_project: [silverblue]
         include:
           - image_name: fedora-base
           - location: ./base
