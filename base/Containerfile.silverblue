@@ -59,7 +59,7 @@ RUN KERNEL_RELEASE=$(cat /kernel-version.txt) && \
         xorg-x11-drv-nvidia \
         xorg-x11-drv-nvidia-cuda \
         kernel-${KERNEL_RELEASE} && \
-    rpm-ostree install /tmp/nvidia/*.rpm && \
+    rpm-ostree install /tmp/nvidia/*${KERNEL_RELEASE}*.rpm && \
     rm -rf /var/* && rm -rf /tmp/nvidia && \
     ostree container commit
 
