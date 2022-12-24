@@ -1,18 +1,18 @@
 name: Build and Push Image
 
 on:
-  # To save on build minutes, this should currently be tested locally and triggered manually
-  #  push:
-  #    paths-ignore:
-  #      - '.github/**'
-  #    branches:
-  #      - main
+  push:
+    paths-ignore:
+      - '.github/**'
+      - '**/*.md'
+    branches:
+      - main
   #pull_request:
   #  paths-ignore:
   #    - '.github/**'
   schedule:
-    # Every Monday at 00:00 while the repository is not used, or is in active development
-    - cron: '0 0 * * 1'
+    # Every day at 03:00
+    - cron: '0 3 * * *'
   workflow_dispatch:
 
 env:
